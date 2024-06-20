@@ -55,16 +55,23 @@ int main() {
     std::vector<std::vector<std::string>> canvas(height, std::vector<std::string>(width, ""));
     std::vector<Circle> circles;
 
-    // Create a series of semi-overlapping triplets of circles for all possible combinations
+    // Define the z-orders and positions for the desired overlapping patterns
+    std::vector<std::vector<int>> zOrders = {
+        {0, 1, 2}, {0, 2, 1}, {1, 0, 2}, // First row
+        {1, 2, 0}, {2, 0, 1}, {2, 1, 0}  // Second row
+    };
+
     int xOffset = 20;
     int yOffset = 15;
-    int zCounter = 0;
-    for (int i = 0; i < 3; ++i) { 
-        for (int j = 0; j < 3; ++j) { 
-            circles.push_back({xOffset + i * 20, yOffset + j * 15, zCounter++, 5, 'R'});
-            circles.push_back({xOffset + i * 20 + 2, yOffset + j * 15 + 2, zCounter++, 5, 'G'});
-            circles.push_back({xOffset + i * 20 + 4, yOffset + j * 15 + 4, zCounter++, 5, 'B'});
+    int zBase = 0;
+    for (int i = 0; i < 2; ++i) { // Two rows
+        for (int j = 0; j < 3; ++j) { // Three triplets per row
+            int idx = i * 3 + j;
+            circles.push_back({xOffset + j * 20, yOffset + i * 20, zBase + zOrders[idx][0], 5, 'R'});
+            circles.push_back({xOffset + j * 20 + 2, yOffset + i * 20 + 1, zBase + zOrders[idx][1], 5, 'G'});
+            circles.push_back({xOffset + j * 20 + 4, yOffset + i * 20 + 2, zBase + zOrders[idx][2], 5, 'B'});
         }
+        zBase += 10;  // Ensure unique global Z values for each new row
     }
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -73,7 +80,6 @@ int main() {
     std::chrono::duration<double> elapsed = end - start;
 
     std::cout << "Serial Execution Time: " << elapsed.count() << " seconds\n";
-    
 
     std::cout << "Legend: R=Red, G=Green, B=Blue, 1=RG,\n 2=RB, 3=GB, 4=GR, 5=BR, 6=BG, "
               << "7=RGB,\n 8=RBG, 9=GRB, A=GBR, B=BRG, C=BGR\n";
@@ -82,3 +88,4 @@ int main() {
 
     return 0;
 }
+
