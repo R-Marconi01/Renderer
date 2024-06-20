@@ -2,59 +2,70 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
-#include <cmath>
+#include <map>
+#include <string>
 
-// Define a structure to represent a circle
 struct Circle {
     int x, y, z, radius;
-    float transparency; // 0.0 = fully transparent, 1.0 = fully opaque
+    char color; // Character representing the color
 };
 
-// Function to check if a pixel is within a circle
 bool isWithinCircle(int px, int py, const Circle& circle) {
     int dx = px - circle.x;
     int dy = py - circle.y;
     return dx * dx + dy * dy <= circle.radius * circle.radius;
 }
 
-// Function to render circles
-void renderCircles(const std::vector<Circle>& circles, std::vector<std::vector<float>>& canvas, int width, int height) {
-    // Sort circles based on their z-coordinate
+void renderCircles(const std::vector<Circle>& circles, std::vector<std::vector<std::string>>& canvas, int width, int height) {
     std::vector<Circle> sortedCircles = circles;
     std::sort(sortedCircles.begin(), sortedCircles.end(), [](const Circle& a, const Circle& b) {
-        return a.z < b.z;
+        return a.z > b.z; // Sort from highest to lowest z to manage precedence
     });
 
-    // Draw circles on the canvas
     for (const auto& circle : sortedCircles) {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 if (isWithinCircle(x, y, circle)) {
-                    canvas[y][x] = std::max(canvas[y][x], circle.transparency);
+                    canvas[y][x] += circle.color; // Add the color to the string at the pixel
                 }
             }
         }
     }
 }
 
-// Function to print the canvas
-void printCanvas(const std::vector<std::vector<float>>& canvas) {
+void printCanvas(const std::vector<std::vector<std::string>>& canvas) {
+    std::map<std::string, char> colorCodes = { // Map to translate combinations into symbols
+        {"R", 'R'}, {"G", 'G'}, {"B", 'B'},
+        {"RG", '1'}, {"RB", '2'}, {"GB", '3'},
+        {"GR", '4'}, {"BR", '5'}, {"BG", '6'},
+        {"RGB", '7'}, {"RBG", '8'}, {"GRB", '9'},
+        {"GBR", 'A'}, {"BRG", 'B'}, {"BGR", 'C'}
+    };
+
     for (const auto& row : canvas) {
         for (const auto& pixel : row) {
-            std::cout << (pixel > 0.0f ? '#' : '.');
+            std::cout << (colorCodes.count(pixel) ? colorCodes[pixel] : '.');
         }
         std::cout << '\n';
     }
 }
 
 int main() {
-    int width = 80, height = 60;  // Smaller canvas for easier visualization
-    std::vector<std::vector<float>> canvas(height, std::vector<float>(width, 0.0f));
-    std::vector<Circle> circles = {
-        {40, 30, 5, 10, 0.5f},
-        {20, 15, 3, 8, 0.7f},
-        {60, 45, 10, 12, 0.4f}
-    };
+    int width = 100, height = 60;
+    std::vector<std::vector<std::string>> canvas(height, std::vector<std::string>(width, ""));
+    std::vector<Circle> circles;
+
+    // Create a series of semi-overlapping triplets of circles for all possible combinations
+    int xOffset = 20;
+    int yOffset = 15;
+    int zCounter = 0;
+    for (int i = 0; i < 3; ++i) { // Reduced grid size for better visibility in the terminal
+        for (int j = 0; j < 3; ++j) { // Arranged in a 3x3 grid
+            circles.push_back({xOffset + i * 20, yOffset + j * 15, zCounter++, 5, 'R'});
+            circles.push_back({xOffset + i * 20 + 2, yOffset + j * 15 + 2, zCounter++, 5, 'G'});
+            circles.push_back({xOffset + i * 20 + 4, yOffset + j * 15 + 4, zCounter++, 5, 'B'});
+        }
+    }
 
     auto start = std::chrono::high_resolution_clock::now();
     renderCircles(circles, canvas, width, height);
@@ -62,6 +73,10 @@ int main() {
     std::chrono::duration<double> elapsed = end - start;
 
     std::cout << "Serial Execution Time: " << elapsed.count() << " seconds\n";
+    
+
+    std::cout << "Legend: R=Red, G=Green, B=Blue, 1=RG, 2=RB, 3=GB, 4=GR, 5=BR, 6=BG, "
+              << "7=RGB, 8=RBG, 9=GRB, A=GBR, B=BRG, C=BGR\n";
 
     printCanvas(canvas);
 
