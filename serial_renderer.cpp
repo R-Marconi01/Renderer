@@ -59,8 +59,8 @@ int main() {
     int xOffset = 20;
     int yOffset = 15;
     int zCounter = 0;
-    for (int i = 0; i < 3; ++i) { // Reduced grid size for better visibility in the terminal
-        for (int j = 0; j < 3; ++j) { // Arranged in a 3x3 grid
+    for (int i = 0; i < 3; ++i) { 
+        for (int j = 0; j < 3; ++j) { 
             circles.push_back({xOffset + i * 20, yOffset + j * 15, zCounter++, 5, 'R'});
             circles.push_back({xOffset + i * 20 + 2, yOffset + j * 15 + 2, zCounter++, 5, 'G'});
             circles.push_back({xOffset + i * 20 + 4, yOffset + j * 15 + 4, zCounter++, 5, 'B'});
@@ -75,8 +75,8 @@ int main() {
     std::cout << "Serial Execution Time: " << elapsed.count() << " seconds\n";
     
 
-    std::cout << "Legend: R=Red, G=Green, B=Blue, 1=RG, 2=RB, 3=GB, 4=GR, 5=BR, 6=BG, "
-              << "7=RGB, 8=RBG, 9=GRB, A=GBR, B=BRG, C=BGR\n";
+    std::cout << "Legend: R=Red, G=Green, B=Blue, 1=RG,\n 2=RB, 3=GB, 4=GR, 5=BR, 6=BG, "
+              << "7=RGB,\n 8=RBG, 9=GRB, A=GBR, B=BRG, C=BGR\n";
 
     printCanvas(canvas);
 

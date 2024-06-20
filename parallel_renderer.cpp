@@ -16,15 +16,14 @@ bool isWithinCircle(int px, int py, const Circle& circle) {
     return dx * dx + dy * dy <= circle.radius * circle.radius;
 }
 
-void renderCircles(const std::vector<Circle>& circles, std::vector<std::vector<std::string>>& canvas, int width, int height) {
+void renderCircles(int numParticles, const std::vector<Circle>& circles, std::vector<std::vector<std::string>>& canvas, int width, int height) {
     std::vector<Circle> sortedCircles = circles;
     std::sort(sortedCircles.begin(), sortedCircles.end(), [](const Circle& a, const Circle& b) {
         return a.z > b.z; // Sort from highest to lowest z to manage precedence
     });
 
-    // Draw circles on the canvas
     for (const auto& circle : sortedCircles) {
-        #pragma omp parallel for
+        #pragma omp parallel for num_threads(numParticles)
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 if (isWithinCircle(x, y, circle)) {
@@ -62,24 +61,28 @@ int main() {
     int xOffset = 20;
     int yOffset = 15;
     int zCounter = 0;
-    for (int i = 0; i < 3; ++i) { // Reduced grid size for better visibility in the terminal
-        for (int j = 0; j < 3; ++j) { // Arranged in a 3x3 grid
+    for (int i = 0; i < 3; ++i) { 
+        for (int j = 0; j < 3; ++j) { 
             circles.push_back({xOffset + i * 20, yOffset + j * 15, zCounter++, 5, 'R'});
             circles.push_back({xOffset + i * 20 + 2, yOffset + j * 15 + 2, zCounter++, 5, 'G'});
             circles.push_back({xOffset + i * 20 + 4, yOffset + j * 15 + 4, zCounter++, 5, 'B'});
         }
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
-    renderCircles(circles, canvas, width, height);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
+    std::vector<int> particleCounts = {1, 2, 3, 4, 5}; // Different number of particles for testing
+    for (int numParticles : particleCounts) {
+        auto start = std::chrono::high_resolution_clock::now();
+        renderCircles(numParticles, circles, canvas, width, height);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
 
-    std::cout << "Serial Execution Time: " << elapsed.count() << " seconds\n";
+        std::cout << "Parallel Execution Time: " << elapsed.count() << " seconds\n";
+    }
+    return 0;
     
 
-    std::cout << "Legend: R=Red, G=Green, B=Blue, 1=RG, 2=RB, 3=GB, 4=GR, 5=BR, 6=BG, "
-              << "7=RGB, 8=RBG, 9=GRB, A=GBR, B=BRG, C=BGR\n";
+     std::cout << "Legend: R=Red, G=Green, B=Blue, 1=RG,\n 2=RB, 3=GB, 4=GR, 5=BR, 6=BG, "
+              << "7=RGB,\n 8=RBG, 9=GRB, A=GBR, B=BRG, C=BGR\n";
 
     printCanvas(canvas);
 
