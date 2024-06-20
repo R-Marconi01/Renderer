@@ -16,14 +16,14 @@ bool isWithinCircle(int px, int py, const Circle& circle) {
     return dx * dx + dy * dy <= circle.radius * circle.radius;
 }
 
-void renderCircles(int numParticles, const std::vector<Circle>& circles, std::vector<std::vector<std::string>>& canvas, int width, int height) {
+void renderCircles(int numthreads, const std::vector<Circle>& circles, std::vector<std::vector<std::string>>& canvas, int width, int height) {
     std::vector<Circle> sortedCircles = circles;
     std::sort(sortedCircles.begin(), sortedCircles.end(), [](const Circle& a, const Circle& b) {
         return a.z > b.z; // Sort from highest to lowest z to manage precedence
     });
 
     for (const auto& circle : sortedCircles) {
-        #pragma omp parallel for num_threads(numParticles)
+        #pragma omp parallel for num_threads(numthreads)
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 if (isWithinCircle(x, y, circle)) {
@@ -76,10 +76,10 @@ int main() {
         zBase += 10;  // Ensure unique global Z values for each new row
     }
 
-    std::vector<int> particleCounts = {1, 2, 3, 4}; // Different number of particles for testing
-    for (int numParticles : particleCounts) {
+    std::vector<int> threadCounts = {1, 2, 3, 4}; // Different number of threads for testing
+    for (int numthreads : threadCounts) {
         auto start = std::chrono::high_resolution_clock::now();
-        renderCircles(numParticles, circles, canvas, width, height);
+        renderCircles(numthreads, circles, canvas, width, height);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 
